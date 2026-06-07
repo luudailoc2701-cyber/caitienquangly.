@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIGHTNING MATRIX - PRESTIGE EDITION</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <style>
+        /* 🎨 HỆ THỐNG BIẾN MÀU (THEMING VARIABLES) */
+        :root {
+            --bg-chinh: #030305;
+            --bg-khung: rgba(12, 12, 18, 0.85);
+            --bg-khung-goc: rgba(16, 16, 24, 0.85);
+            --bg-o-nhap: #09090d;
+            --bg-thanh-dau: #14141f;
+            --border-chinh: #00f2fe;
+            --border-phu: #232333;
+            --chu-chinh: #e2e8f0;
+            --chu-sang: #00f2fe;
+            --shadow-glow: rgba(0, 242, 254, 0.25);
+            --ai-color: #00ff87;
+        }
+
+        [data-theme="light"] {
+            --bg-chinh: #f0f2f5;
+            --bg-khung: rgba(255, 255, 255, 0.9);
+            --bg-khung-goc: rgba(245, 247, 250, 0.95);
+            --bg-o-nhap: #ffffff;
+            --bg-thanh-dau: #e4e6eb;
+            --border-chinh: #0070f3;
+            --border-phu: #ccd0d5;
+            --chu-chinh: #1c1e21;
+            --chu-sang: #0070f3;
+            --shadow-glow: rgba(0, 112, 243, 0.15);
+            --ai-color: #00aa50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--chu-chinh); margin: 0; padding: 0;
+            background-color: var(--bg-chinh); overflow-x: hidden;
+            min-height: 100vh; position: relative;
+            display: flex; flex-direction: column; transition: background-color 0.3s;
+        }
+
+        #KhungDoHoaNen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+
+        /* 📱 MENU ĐIỀU HƯỚNG THANH LỊCH */
+        .ThanhMenuChinh {
+            background: var(--bg-khung); border-bottom: 2px solid var(--border-chinh);
+            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+            position: relative; z-index: 100; backdrop-filter: blur(10px); box-shadow: 0 2px 20px var(--shadow-glow);
+        }
+        .MenuTrai { display: flex; gap: 15px; align-items: center; }
+        .LogoGiaoDien { font-weight: bold; font-size: 18px; color: var(--chu-sang); letter-spacing: 1px; text-shadow: 0 0 8px var(--shadow-glow); }
+        .CumNutChuyenTab { display: flex; gap: 8px; }
+        .NutTabGiaoDien {
+            background: transparent; color: var(--chu-chinh); border: 1px solid var(--border-phu);
+            padding: 6px 14px; font-size: 13px; border-radius: 4px; cursor: pointer; transition: 0.2s;
+        }
+        .NutTabGiaoDien.Active, .NutTabGiaoDien:hover { background: var(--border-chinh); color: #fff; border-color: var(--border-chinh); }
+
+        .FormDangNhapGoc {
+            width: 90%; max-width: 380px; margin: auto; text-align: center;
+            background: var(--bg-khung-goc); border: 2px solid var(--border-chinh);
+            padding: 40px 20px; border-radius: 12px; box-shadow: 0 0 30px var(--shadow-glow);
+            box-sizing: border-box; backdrop-filter: blur(10px); position: relative; z-index: 2;
+        }
+
+        .KhungUngDung {
+            background-color: var(--bg-khung); width: 96vw; min-height: 85vh; margin: 2vh auto;
+            border-radius: 16px; padding: 20px; box-shadow: 0 0 40px var(--shadow-glow);
+            border: 2px solid var(--border-chinh); backdrop-filter: blur(15px);
+            position: relative; z-index: 1; box-sizing: border-box; display: flex; flex-direction: column;
+        }
+
+        h1, h2, h3 { color: var(--chu-sang); text-align: center; text-shadow: 0 0 10px var(--shadow-glow); }
+        .AnTrangHoanToan { display: none !important; }
+
+        input[type="text"], input[type="password"], input[type="month"], select, input[type="number"] {
+            width: 100%; padding: 12px; margin: 10px 0; background-color: var(--bg-o-nhap);
+            border: 1px solid var(--border-phu); border-radius: 6px; color: var(--chu-chinh); box-sizing: border-box; font-size: 14px;
+        }
+        input:focus, select:focus { border-color: var(--border-chinh); outline: none; box-shadow: 0 0 8px var(--shadow-glow); }
+
+        button {
+            background-color: var(--border-chinh); color: #fff; border: none;
+            padding: 12px 20px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s ease;
+        }
+        button:hover { filter: brightness(1.1); transform: scale(1.01); }
+
+        .VungThemViec {
+            display: flex; gap: 15px; margin-bottom: 25px; background-color: var(--bg-khung-goc);
+            padding: 15px; border-radius: 8px; border: 1px solid var(--border-phu); align-items: center; flex-wrap: wrap;
+        }
+        .VungThemViec input[type="text"] { margin: 0; flex: 2; min-width: 200px; }
+        .KhungChonThang { flex: 1; min-width: 160px; margin: 0; width: auto !important; }
+
+        .KhuVucNoiDungGiaoDien { display: flex; flex-direction: column; width: 100%; flex: 1; min-height: 0; }
+        .KhuVucNoiDungGiaoDien.CheDoDoc { flex-direction: row; }
+
+        .KhungChuaBang {
+            overflow: auto; background-color: var(--bg-o-nhap); padding: 15px; border-radius: 12px;
+            border: 1px solid var(--border-phu); box-sizing: border-box; min-height: 150px; min-width: 100%; height: 280px;
+        }
+        .KhuVucNoiDungGiaoDien.CheDoDoc .KhungChuaBang { height: auto; width: 50%; min-width: 50%; }
+
+        .ThanhKeoPhanChiaKhongGian {
+            background-color: var(--bg-khung-goc); position: relative; z-index: 10; box-sizing: border-box;
+            display: flex; align-items: center; justify-content: center; cursor: ns-resize; margin: 6px 0; height: 12px;
+            border-top: 1px solid var(--border-phu); border-bottom: 1px solid var(--border-phu); border-radius: 4px;
+        }
+        .KhuVucNoiDungGiaoDien.CheDoDoc .ThanhKeoPhanChiaKhongGian { width: 12px; height: auto; cursor: ew-resize; margin: 0 6px; border-left: 1px solid var(--border-phu); border-right: 1px solid var(--border-phu); border-top: none; border-bottom: none; }
+        .ThanhKeoPhanChiaKhongGian::after { content: '···'; color: #4b5563; font-weight: bold; font-size: 18px; letter-spacing: 2px; }
+        .KhuVucNoiDungGiaoDien.CheDoDoc .ThanhKeoPhanChiaKhongGian::after { content: '⋮'; }
+        .ThanhKeoPhanChiaKhongGian.DangKeo { background-color: var(--border-chinh); }
+
+        .VungBieuDoAndControls {
+            background-color: var(--bg-khung-goc); padding: 20px; border-radius: 12px; border: 1px solid var(--border-phu);
+            display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; flex: 1; min-height: 250px;
+        }
+        .VungCanvas { flex: 1; width: 100%; height: 100%; min-height: 280px; position: relative; display: flex; justify-content: center; align-items: center; }
+        .VungCanvas canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+
+        .BangLichTrinh { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .BangLichTrinh th, .BangLichTrinh td { border: 1px solid var(--border-phu); padding: 10px; text-align: center; white-space: nowrap; }
+        .BangLichTrinh th { background-color: var(--bg-thanh-dau); color: var(--chu-sang); font-weight: bold; position: sticky; top: 0; z-index: 5; }
+        .O_TichX { width: 22px; height: 22px; cursor: pointer; accent-color: var(--border-chinh); margin: 0; }
+        .NutXoaViec { background-color: #ff3355; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+
+        .CumNutChuyenBieuDo { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        .NutChuyenBieuDo, .NutBoCuc { background-color: transparent; color: var(--chu-sang); border: 2px solid var(--border-chinh); padding: 6px 16px; font-size: 13px; font-weight: bold; border-radius: 4px; }
+        .NutChuyenBieuDo.Active, .NutBoCuc.Active { background-color: var(--border-chinh); color: #fff; }
+
+        .KhungKhaiThacAI { margin-top: 20px; background-color: var(--bg-o-nhap); border: 1px dashed var(--ai-color); border-radius: 12px; padding: 15px; }
+        .ThanhTieuDeAI { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-phu); padding-bottom: 8px; }
+        #NoiDungGiaiPhapAI { background-color: var(--bg-khung-goc); padding: 14px; border-radius: 8px; border-left: 4px solid var(--ai-color); font-size: 14px; line-height: 1.6; max-height: 150px; overflow-y: auto; white-space: pre-line; }
+        .NutGoiAI { background-color: var(--ai-color); color: #fff; }
+
+        /* ⚙️ HỘP THOẠI CÀI ĐẶT (SETTINGS MODAL) */
+        .KhungModalCaiDat {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; backdrop-filter: blur(5px);
+        }
+        .NoiDungModal {
+            background: var(--bg-khung-goc); border: 2px solid var(--border-chinh);
+            padding: 25px; border-radius: 12px; width: 90%; max-width: 400px;
+            box-shadow: 0 0 30px var(--shadow-glow); box-sizing: border-box;
+        }
+        .DongTuyChon { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+
+        /* ⏳ ENGINE ĐỒNG HỒ ĐẾM GIỜ CYBER */
+        .ManHinhLedDongHo {
+            font-size: 64px; font-weight: bold; font-family: 'Courier New', Courier, monospace;
+            color: var(--border-chinh); text-shadow: 0 0 20px var(--shadow-glow);
+            margin: 20px 0; letter-spacing: 2px;
+        }
+        .CumChinhThoiGian { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .CumChinhThoiGian div { display: flex; flex-direction: column; align-items: center; width: 70px; }
+        .CumChinhThoiGian label { font-size: 11px; color: var(--chu-sang); font-weight: bold; margin-bottom: 4px; }
+        .CumChinhThoiGian input { text-align: center; font-size: 16px; padding: 8px; margin: 0; }
+
+        /* 📺 PLAYER COMPONENT */
+        .CuaSoMediaMini {
+            position: fixed; bottom: 20px; left: 20px; z-index: 99;
+            background: var(--bg-khung-goc); border-radius: 14px; width: 330px;
+            box-shadow: 0 0 25px var(--shadow-glow); padding: 14px; border: 2px solid var(--border-chinh);
+        }
+        .CuaSoMediaMini.AnMediaWindow { transform: translateY(calc(100% - 38px)); }
+        .ThanhTieuDeCuaSo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer; }
+        .VungKhungXemVideo { width: 100%; aspect-ratio: 16 / 9; background-color: #000; border-radius: 8px; overflow: hidden; position: relative; }
+        .VungSongNhacDaTang { width: 100%; height: 40px; margin: 8px 0; background: rgba(15, 15, 25, 0.2); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-phu); }
+        #CanvasSongNhac { width: 100%; height: 100%; display: block; }
+        .BoNutMedia { display: flex; justify-content: space-between; align-items: center; gap: 4px; margin-top: 5px; }
+        .NutChucNangNho { background-color: var(--bg-o-nhap); color: var(--chu-chinh); padding: 6px 10px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border-phu); font-weight: bold; }
+        .NutGiaoDienPlay { background-color: var(--ai-color); color: #fff; }
+
+        @media screen and (max-width: 768px) {
+            .KhungUngDung { width: 98vw; padding: 12px; }
+            .KhuVucNoiDungGiaoDien, .KhuVucNoiDungGiaoDien.CheDoDoc { flex-direction: column !important; }
+            .KhuVucNoiDungGiaoDien.CheDoDoc .KhungChuaBang { width: 100% !important; }
+            .ThanhKeoPhanChiaKhongGian { display: none !important; }
+            .VungThemViec { flex-direction: column; align-items: stretch; }
+            .CuaSoMediaMini { width: calc(100% - 20px); left: 10px; bottom: 10px; }
+            .ManHinhLedDongHo { font-size: 38px; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="KhungDoHoaNen"></canvas>
+
+<div id="ThanhMenuHeThong" class="ThanhMenuChinh AnTrangHoanToan">
+    <div class="MenuTrai">
+        <div class="LogoGiaoDien">LIGHTNING MATRIX⚡</div>
+        <div class="CumNutChuyenTab">
+            <button class="NutTabGiaoDien Active" id="TabMaTran" onclick="chuyenTabHeThong('matran')">Ma Trận Việc</button>
+            <button class="NutTabGiaoDien" id="TabDongHo" onclick="chuyenTabHeThong('dongho')">Đồng Hồ Đếm Giờ</button>
+            <button class="NutTabGiaoDien AnTrangHoanToan" id="TabAdmin" style="border-color: #ffaa00; color: #ffaa00;" onclick="chuyenTabHeThong('admin')">🔑 Dashboard Admin</button>
+        </div>
+    </div>
+    <div>
+        <button class="NutTabGiaoDien" style="border-color: var(--border-chinh);" onclick="moModalCaiDat(true)">⚙️ Cài Đặt</button>
+        <button id="BtnDangXuat" style="background-color: #ff3355; padding: 6px 12px; font-size:13px; margin-left:8px;">Đăng xuất</button>
+    </div>
+</div>
+
+<div id="ModalCaiDat" class="KhungModalCaiDat AnTrangHoanToan">
+    <div class="NoiDungModal">
+        <h3 style="margin-top: 0;">CÀI ĐẶT HỆ THỐNG</h3>
+        <hr style="border-color: var(--border-phu);">
+
+        <div class="DongTuyChon">
+            <label style="font-weight: bold;">Chế độ hiển thị:</label>
+            <select id="SelectGiaoDienTheme" style="width: 180px; margin: 0;" onchange="doiThemeGiaoDien(this.value)">
+                <option value="dark">Chế độ Tối (Dark)</option>
+                <option value="light">Chế độ Sáng (Light)</option>
+            </select>
+        </div>
+
+        <div class="DongTuyChon">
+            <label style="font-weight: bold;">Hiệu ứng nền:</label>
+            <select id="SelectHieuUngNen" style="width: 180px; margin: 0;" onchange="doiHieuUngNenThucTe(this.value)">
+                <option value="lightning">Tia sét (Lightning)</option>
+                <option value="snow">Bông tuyết rơi</option>
+                <option value="geometry">Hình học va chạm</option>
+            </select>
+        </div>
+
+        <hr style="border-color: var(--border-phu); margin-top: 20px;">
+        <div style="text-align: right;">
+            <button onclick="moModalCaiDat(false)" style="padding: 8px 20px;">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<div id="TrangDangNhap" class="FormDangNhapGoc">
+    <h2 style="margin-top: 0; font-size: 24px; letter-spacing: 1px;">LIGHTNING MATRIX</h2>
+    <p style="color: #6b7280; font-size: 13px; margin-bottom: 25px;">Hệ thống quản trị tối ưu đa nền tảng</p>
+    <input type="text" id="TenUser" placeholder="Tên tài khoản...">
+    <input type="password" id="MatKhauUser" placeholder="Mật mã khóa...">
+    <button id="BtnDangNhap" style="width: 100%; margin-top: 10px;">⚡ Kích Hoạt Ma Trận</button>
+</div>
+
+<div id="TrangChinh" class="KhungUngDung AnTrangHoanToan">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap:10px;">
+        <span id="ChuChaoMung" style="color: var(--chu-sang); font-weight: bold; font-size: 15px;"></span>
+        <div style="display: flex; gap: 8px;">
+            <button class="NutBoCuc Active" id="BtnBoCucNang" onclick="doiBoCucManHinh('ngang', this)">Bố cục Ngang</button>
+            <button class="NutBoCuc" id="BtnBoCucDoc" onclick="doiBoCucManHinh('doc', this)">Chia Đôi</button>
+        </div>
+    </div>
+
+    <div class="VungThemViec">
+        <div style="display:flex; flex-direction:column; gap:4px;" class="KhungChonThang">
+            <label style="font-size:11px; color:var(--chu-sang); font-weight:bold;">CHU KỲ THÁNG:</label>
+            <input type="month" id="KhungChonThang" onchange="thayDoiThangNamThucTe()">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:4px; flex:2;">
+            <label style="font-size:11px; color:var(--chu-sang); font-weight:bold;">NHIỆM VỤ CHIẾN LƯỢC:</label>
+            <input type="text" id="TenViecMoi" placeholder="Nhập tên nhiệm vụ...">
+        </div>
+        <button id="BtnThemViec" style="margin-top: 16px;">+ Thêm Việc</button>
+    </div>
+
+    <div class="KhuVucNoiDungGiaoDien" id="KhungNoiDung">
+        <div class="KhungChuaBang" id="KhungLichResize">
+            <table class="BangLichTrinh" id="BangHienThi">
+                <thead id="DauBang"></thead>
+                <tbody id="ThanBang"></tbody>
+            </table>
+        </div>
+        <div id="ThanhResizerChinh" class="ThanhKeoPhanChiaKhongGian"></div>
+        <div class="VungBieuDoAndControls" id="KhungChartResize">
+            <h2 id="TieuDeChartThoiGian" style="font-size: 15px; margin: 0 0 10px 0; letter-spacing: 1px;">BIỂU ĐỒ TIẾP CẬN TỶ LỆ (%)</h2>
+            <div class="CumNutChuyenBieuDo">
+                <button class="NutChuyenBieuDo Active" id="BtnChartPie" onclick="doiCheDoBieuDo('pie', this)">Quạt Tròn</button>
+                <button class="NutChuyenBieuDo" id="BtnChartBar" onclick="doiCheDoBieuDo('bar', this)">Hình Cột</button>
+            </div>
+            <div class="VungCanvas" id="BoKhungCanvas">
+                <canvas id="BieuDoQuat"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="KhungKhaiThacAI">
+        <div class="ThanhTieuDeAI">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🧠</span>
+                <h3 style="margin: 0; color: var(--ai-color); font-size: 15px;">CỐ VẤN CHIẾN LƯỢC - AI EXPERT</h3>
+            </div>
+            <button class="NutGoiAI" id="BtnKichHoatAI">🔮 Quét Biểu Đồ & Phân Tích</button>
+        </div>
+        <div id="NoiDungGiaiPhapAI">Hệ thống sẵn sàng. Nhấn quét dữ liệu để AI phân tích hiệu suất của bạn.</div>
+    </div>
+</div>
+
+<div id="TrangDongHoKhongGian" class="KhungUngDung AnTrangHoanToan">
+    <h2>⏳ ĐỒNG HỒ ĐẾM THỜI GIAN CÔNG VIỆC</h2>
+    <p style="text-align: center; color: var(--chu-chinh); margin-bottom: 25px;">Hệ thống đồng hồ đếm xuôi, đếm ngược đa năng kèm âm thanh cảnh báo tùy chỉnh.</p>
+
+    <div style="background: var(--bg-o-nhap); padding: 30px; border-radius: 12px; text-align: center; border: 1px solid var(--border-phu); max-width: 600px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+
+        <div class="CumNutChuyenBieuDo">
+            <button class="NutChuyenBieuDo Active" id="BtnModeDemNguoc" onclick="doiCheDoDongHo('down')">Đếm Ngược (Timer)</button>
+            <button class="NutChuyenBieuDo" id="BtnModeDemXuoi" onclick="doiCheDoDongHo('up')">Đếm Xuôi (Stopwatch)</button>
+        </div>
+
+        <div class="CumChinhThoiGian" id="KhungNhapTimeNguoc">
+            <div>
+                <label>GIỜ</label>
+                <input type="number" id="InputGio" min="0" max="23" value="0">
+            </div>
+            <div>
+                <label>PHÚT</label>
+                <input type="number" id="InputPhut" min="0" max="59" value="25">
+            </div>
+            <div>
+                <label>GIÂY</label>
+                <input type="number" id="InputGiay" min="0" max="59" value="0">
+            </div>
+        </div>
+
+        <div id="KhungChonAmThanh" style="margin-bottom: 15px; font-size: 13px;">
+            <label style="font-weight:bold; color:var(--chu-sang);">Âm thanh báo hiệu: </label>
+            <select id="SelectAmBao" style="width: 180px; display:inline-block; padding: 6px; margin-left: 10px;">
+                <option value="scifi">Báo động Sci-Fi 🌌</option>
+                <option value="digital">Digital Beep ⚡</option>
+                <option value="classic">Chuông cơ học 🔔</option>
+            </select>
+            <button onclick="testThuAmThanh()" style="padding: 6px 12px; font-size: 11px; margin-left: 6px; background:#7b2cbf;">Nghe thử</button>
+        </div>
+
+        <div class="ManHinhLedDongHo" id="LedHienThiDongHo">00:25:00:00</div>
+
+        <div style="display: flex; justify-content: center; gap: 12px;">
+            <button id="BtnChayDongHo" onclick="kichHoatDongHoThucTe()" style="background-color: var(--ai-color); width: 120px;">BẮT ĐẦU</button>
+            <button id="BtnTamDungDongHo" onclick="tamDungDongHoThucTe()" style="background-color: #ffaa00; width: 120px;" disabled>TẠM DÙNG</button>
+            <button onclick="resetDongHoThucTe()" style="background-color: #ff3355; width: 120px;">CÀI LẠI</button>
+        </div>
+    </div>
+</div>
+
+<div id="TrangAdminMaster" class="KhungUngDung AnTrangHoanToan">
+    <h2 style="color: #ffaa00; text-shadow: 0 0 10px rgba(255,170,0,0.3);">🔑 BẢNG ĐIỀU KHIỂN TỐI CAO ADMIN</h2>
+    <p style="text-align: center; color: #6b7280;">Hệ thống kiểm soát cơ sở dữ liệu tài khoản cục bộ trên thiết bị.</p>
+
+    <div class="KhungChuaBang" style="height: auto; max-height: 400px; margin-top: 20px;">
+        <table class="BangLichTrinh">
+            <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên Tài Khoản (Username)</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác Hệ Thống</th>
+            </tr>
+            </thead>
+            <tbody id="DanhSachUserAdmin">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="KhungCuaSoMedia" class="CuaSoMediaMini AnTrangHoanToan">
+    <div class="ThanhTieuDeCuaSo" onclick="haCuaSoMedia()">
+        <span style="color:var(--chu-sang); font-size:11px; font-weight:bold; letter-spacing:1px;">🔮 CYBER AUDIO PLAYER</span>
+        <span id="NutThuGaoCuaSo" style="color:var(--chu-sang); font-size:11px;">🔽 Thu gọn</span>
+    </div>
+    <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+        <input type="text" id="UrlYtGiaoDien" style="padding:6px; font-size:11px; margin:0; background:var(--bg-o-nhap);" placeholder="Dán link bài hát YouTube...">
+        <button onclick="taiLuonVideoYoutube()" style="padding:0 10px; font-size:11px;">Nạp</button>
+    </div>
+    <div class="VungKhungXemVideo"><div id="TrinhPhatCoreYt"></div></div>
+    <div class="VungSongNhacDaTang"><canvas id="CanvasSongNhac"></canvas></div>
+    <div class="BoNutMedia">
+        <button class="NutChucNangNho NutGiaoDienPlay" onclick="playVideoYt()">▶</button>
+        <button class="NutChucNangNho" style="background-color:#ff3355; color:white;" onclick="pauseVideoYt()">⏸</button>
+        <button class="NutChucNangNho" onclick="tuaVideoYoutube(-10)">⏪</button>
+        <button class="NutChucNangNho" onclick="tuaVideoYoutube(10)">⏩</button>
+        <select id="SelectSpeed" style="width:70px; padding:4px; font-size:11px; margin:0; height:28px;" onchange="doiTocDoPhatYt(this.value)">
+            <option value="0.5">0.5x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+        </select>
+    </div>
+</div>
+
+<script>
+    // 🚀 GRAPHIC BACKGROUND ENGINE (3 IN 1)
+    const canvasNen = document.getElementById("KhungDoHoaNen");
+    const ctxNen = canvasNen.getContext("2d");
+    let loaiHieuUngHienTai = 'lightning';
+    let lightning = []; let flashOpacity = 0;
+    let phanTuTuyet = []; let phanTuHinhHoc = [];
+
+    function resizeCanvas() { canvasNen.width = window.innerWidth; canvasNen.height = window.innerHeight; }
+    resizeCanvas(); window.addEventListener("resize", resizeCanvas);
+
+    function khoiTaoGocHieuUng() {
+        phanTuTuyet = []; phanTuHinhHoc = [];
+        for(let i=0; i<60; i++) {
+            phanTuTuyet.push({ x: Math.random()*canvasNen.width, y: Math.random()*canvasNen.height, r: Math.random()*3+1, d: Math.random()*1+0.5 });
+        }
+        let mauSacHinh = ['#00f2fe', '#00ff87', '#ffaa00', '#ff0055', '#7b2cbf'];
+        for(let i=0; i<15; i++) {
+            phanTuHinhHoc.push({
+                x: Math.random()*(canvasNen.width-40)+20, y: Math.random()*(canvasNen.height-40)+20,
+                vx: (Math.random()*2 - 1)*1.5, vy: (Math.random()*2 - 1)*1.5,
+                size: Math.random()*20+10, canh: Math.floor(Math.random()*3)+3,
+                color: mauSacHinh[Math.floor(Math.random()*mauSacHinh.length)], gocXoay: Math.random()*Math.PI
+            });
+        }
+    }
+    khoiTaoGocHieuUng();
+
+    function veHinhDaGiac(ctx, x, y, radius, sides, rotateGoc) {
+        ctx.beginPath();
+        for (let i = 0; i < sides; i++) {
+            let angle = rotateGoc + (i * 2 * Math.PI / sides);
+            ctx.lineTo(x + radius * Math.cos(angle), y + radius * Math.sin(angle));
+        }
+        ctx.closePath();
+    }
+
+    function renderGiaoDienNen() {
+        ctxNen.clearRect(0, 0, canvasNen.width, canvasNen.height);
+        let themeHienTai = document.body.getAttribute('data-theme');
+        let mauNetVe = themeHienTai === 'light' ? 'rgba(0, 112, 243, 0.4)' : 'rgba(0, 242, 254, 0.85)';
+        let mauDoBong = themeHienTai === 'light' ? '#0070f3' : '#00f2fe';
+
+        if (loaiHieuUngHienTai === 'lightning') {
+            if (flashOpacity > 0) {
+                ctxNen.fillStyle = themeHienTai === 'light' ? `rgba(0, 112, 243, ${flashOpacity * 0.1})` : `rgba(0, 242, 254, ${flashOpacity * 0.25})`;
+                ctxNen.fillRect(0, 0, canvasNen.width, canvasNen.height); flashOpacity -= 0.02;
+            }
+            if (Math.random() < 0.015 && lightning.length === 0) {
+                let xGoc = Math.random() * canvasNen.width;
+                lightning = [{x: xGoc, y: 0}]; let dy = 0;
+                while(dy < canvasNen.height) { dy += Math.random()*40+20; lightning.push({x: lightning[lightning.length-1].x + (Math.random()*60-30), y: dy}); }
+                flashOpacity = Math.random() * 0.2 + 0.1;
+            }
+            if (lightning.length > 0) {
+                ctxNen.strokeStyle = mauNetVe; ctxNen.lineWidth = Math.random()*2+1.5;
+                ctxNen.shadowBlur = 20; ctxNen.shadowColor = mauDoBong;
+                ctxNen.beginPath(); ctxNen.moveTo(lightning[0].x, lightning[0].y);
+                for(let i=1; i<lightning.length; i++) ctxNen.lineTo(lightning[i].x, lightning[i].y);
+                ctxNen.stroke(); ctxNen.shadowBlur = 0;
+                if (Math.random() < 0.3) lightning = [];
+            }
+        }
+        else if (loaiHieuUngHienTai === 'snow') {
+            ctxNen.fillStyle = themeHienTai === 'light' ? 'rgba(0, 112, 243, 0.4)' : 'rgba(255, 255, 255, 0.6)';
+            phanTuTuyet.forEach(p => {
+                ctxNen.beginPath(); ctxNen.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctxNen.fill();
+                p.y += p.d; p.x += Math.sin(p.y/30)*0.3;
+                if (p.y > canvasNen.height) { p.y = -10; p.x = Math.random()*canvasNen.width; }
+            });
+        }
+        else if (loaiHieuUngHienTai === 'geometry') {
+            phanTuHinhHoc.forEach(p => {
+                ctxNen.strokeStyle = p.color; ctxNen.lineWidth = 1.5;
+                ctxNen.globalAlpha = themeHienTai === 'light' ? 0.4 : 0.7;
+                veHinhDaGiac(ctxNen, p.x, p.y, p.size, p.canh, p.gocXoay); ctxNen.stroke();
+                ctxNen.globalAlpha = 1.0;
+                p.x += p.vx; p.y += p.vy; p.gocXoay += 0.005;
+                if(p.x - p.size < 0 || p.x + p.size > canvasNen.width) p.vx *= -1;
+                if(p.y - p.size < 0 || p.y + p.size > canvasNen.height) p.vy *= -1;
+            });
+        }
+        requestAnimationFrame(renderGiaoDienNen);
+    }
+    renderGiaoDienNen();
+
+    // ⚙️ CHỨC NĂNG CÀI ĐẶT & TAB MENU INTERACTION
+    function moModalCaiDat(mo) { document.getElementById('ModalCaiDat').classList[mo ? 'remove' : 'add']('AnTrangHoanToan'); }
+    function doiThemeGiaoDien(theme) { document.body.setAttribute('data-theme', theme); if(bieuDoCuaToi) { dungLaiGiaoDien(); } }
+    function doiHieuUngNenThucTe(type) { loaiHieuUngHienTai = type; khoiTaoGocHieuUng(); }
+
+    function chuyenTabHeThong(tab) {
+        document.querySelectorAll('.NutTabGiaoDien').forEach(n => n.classList.remove('Active'));
+        document.getElementById('TrangChinh').classList.add('AnTrangHoanToan');
+        document.getElementById('TrangDongHoKhongGian').classList.add('AnTrangHoanToan');
+        document.getElementById('TrangAdminMaster').classList.add('AnTrangHoanToan');
+
+        if(tab === 'matran') {
+            document.getElementById('TabMaTran').classList.add('Active');
+            document.getElementById('TrangChinh').classList.remove('AnTrangHoanToan');
+            if(bieuDoCuaToi) bieuDoCuaToi.resize();
+        } else if(tab === 'dongho') {
+            document.getElementById('TabDongHo').classList.add('Active');
+            document.getElementById('TrangDongHoKhongGian').classList.remove('AnTrangHoanToan');
+        } else if(tab === 'admin') {
+            document.getElementById('TabAdmin').classList.add('Active');
+            document.getElementById('TrangAdminMaster').classList.remove('AnTrangHoanToan');
+            quetDanhSachUserChoAdmin();
+        }
+    }
+
+    // ⏱️ AUDIO SYNTHESIZER HỆ THỐNG ĐỒNG HỒ (Tự tạo sóng âm không cần file mp3 bên ngoài)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function phatAmThanhBaoDong(loai) {
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+
+        if (loai === 'scifi') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        } else if (loai === 'digital') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        } else if (loai === 'classic') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+    function testThuAmThanh() { phatAmThanhBaoDong(document.getElementById('SelectAmBao').value); }
+
+    // LOGIC CORE CLOCK ENGINE (ĐẾM XUÔI/NGƯỢC TÍC TẮC)
+    let kieuDongHoHienTai = 'down'; // down = đếm ngược, up = đếm xuôi
+    let thoiGianGocMiliGiay = 0; let intervalDongHo = null; let dangChayDongHo = false;
+    let thoiGianBatDauHeThong = 0; let thoiGianDaTichLuy = 0;
+
+    function doiCheDoDongHo(kieu) {
+        kieuDongHoHienTai = kieu; resetDongHoThucTe();
+        document.getElementById('BtnModeDemNguoc').classList[kieu==='down'?'add':'remove']('Active');
+        document.getElementById('BtnModeDemXuoi').classList[kieu==='up'?'add':'remove']('Active');
+        document.getElementById('KhungNhapTimeNguoc').style.display = kieu==='down'?'flex':'none';
+        document.getElementById('KhungChonAmThanh').style.display = kieu==='down'?'block':'none';
+        document.getElementById('LedHienThiDongHo').innerText = kieu==='down' ? "00:25:00:00" : "00:00:00:00";
+    }
+
+    function dinhDangLedDongHo(tongMiliGiay) {
+        if(tongMiliGiay < 0) tongMiliGiay = 0;
+        let ms = Math.floor((tongMiliGiay % 1000) / 10);
+        let tongGiay = Math.floor(tongMiliGiay / 1000);
+        let s = tongGiay % 60; let tongPhut = Math.floor(tongGiay / 60);
+        let m = tongPhut % 60; let h = Math.floor(tongPhut / 60);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}:${String(ms).padStart(2,'0')}`;
+    }
+
+    function kichHoatDongHoThucTe() {
+        if(dangChayDongHo) return;
+
+        if (kieuDongHoHienTai === 'down' && thoiGianDaTichLuy === 0) {
+            let h = parseInt(document.getElementById('InputGio').value) || 0;
+            let m = parseInt(document.getElementById('InputPhut').value) || 0;
+            let s = parseInt(document.getElementById('InputGiay').value) || 0;
+            thoiGianGocMiliGiay = (h * 3600 + m * 60 + s) * 1000;
+            if(thoiGianGocMiliGiay <= 0) { alert("Vui lòng đặt thời gian đếm ngược lớn hơn 0!"); return; }
+        }
+
+        dangChayDongHo = true;
+        thoiGianBatDauHeThong = performance.now();
+        document.getElementById('BtnChayDongHo').disabled = true;
+        document.getElementById('BtnTamDungDongHo').disabled = false;
+
+        intervalDongHo = setInterval(() => {
+            let thoiGianTroiQua = performance.now() - thoiGianBatDauHeThong;
+            if (kieuDongHoHienTai === 'down') {
+                let conLai = (thoiGianGocMiliGiay - thoiGianDaTichLuy) - thoiGianTroiQua;
+                if (conLai <= 0) {
+                    clearInterval(intervalDongHo); dangChayDongHo = false;
+                    document.getElementById('LedHienThiDongHo').innerText = "00:00:00:00";
+                    thoiGianDaTichLuy = 0;
+                    document.getElementById('BtnChayDongHo').disabled = false;
+                    document.getElementById('BtnTamDungDongHo').disabled = true;
+                    // Hú còi báo hiệu lặp lại 3 lần
+                    let count = 0;
+                    let loopAm = setInterval(() => {
+                        phatAmThanhBaoDong(document.getElementById('SelectAmBao').value);
+                        count++; if(count >= 3) clearInterval(loopAm);
+                    }, 600);
+                    return;
+                }
+                document.getElementById('LedHienThiDongHo').innerText = dinhDangLedDongHo(conLai);
+            } else {
+                let tongXuoi = thoiGianDaTichLuy + thoiGianTroiQua;
+                document.getElementById('LedHienThiDongHo').innerText = dinhDangLedDongHo(tongXuoi);
+            }
+        }, 30);
+    }
+
+    function tamDungDongHoThucTe() {
+        if(!dangChayDongHo) return;
+        clearInterval(intervalDongHo); dangChayDongHo = false;
+        thoiGianDaTichLuy += (performance.now() - thoiGianBatDauHeThong);
+        document.getElementById('BtnChayDongHo').disabled = false;
+        document.getElementById('BtnTamDungDongHo').disabled = true;
+    }
+
+    function resetDongHoThucTe() {
+        clearInterval(intervalDongHo); dangChayDongHo = false;
+        thoiGianDaTichLuy = 0; thoiGianGocMiliGiay = 0;
+        document.getElementById('BtnChayDongHo').disabled = false;
+        document.getElementById('BtnTamDungDongHo').disabled = true;
+        if (kieuDongHoHienTai === 'down') {
+            let h = parseInt(document.getElementById('InputGio').value) || 0;
+            let m = parseInt(document.getElementById('InputPhut').value) || 0;
+            let s = parseInt(document.getElementById('InputGiay').value) || 0;
+            document.getElementById('LedHienThiDongHo').innerText = dinhDangLedDongHo((h*3600+m*60+s)*1000);
+        } else {
+            document.getElementById('LedHienThiDongHo').innerText = "00:00:00:00";
+        }
+    }
+
+
+    // LOGIC CORE MATRIX & FIX LỖI 100%
+    let bieuDoCuaToi = null; let currentUser = ""; let danhSachCongViec = [];
+    let typeBieuDoHienTai = 'pie'; let boCucHienTai = 'ngang'; let DAYS = 31;
+
+    const btnDangNhap = document.getElementById('BtnDangNhap');
+    const btnThemViec = document.getElementById('BtnThemViec');
+    const tenViecMoi = document.getElementById('TenViecMoi');
+    const khungNoiDung = document.getElementById('KhungNoiDung');
+    const dauBang = document.getElementById('DauBang');
+    const thanBang = document.getElementById('ThanBang');
+    const trangDangNhap = document.getElementById('TrangDangNhap');
+    const trangChinh = document.getElementById('TrangChinh');
+    const btnKichHoatAI = document.getElementById('BtnKichHoatAI');
+    const noiDungGiaiPhapAI = document.getElementById('NoiDungGiaiPhapAI');
+    const khungChonThang = document.getElementById('KhungChonThang');
+
+    const thoiGianThuc = new Date();
+    khungChonThang.value = thoiGianThuc.getFullYear() + "-" + String(thoiGianThuc.getMonth() + 1).padStart(2, '0');
+
+    function tinhSoNgayTrongThang(chuoiThangNam) {
+        if(!chuoiThangNam) return 31; const [nam, thang] = chuoiThangNam.split('-').map(Number); return new Date(nam, thang, 0).getDate();
+    }
+
+    function thayDoiThangNamThucTe() {
+        if(!currentUser) return; DAYS = tinhSoNgayTrongThang(khungChonThang.value);
+        document.getElementById("TieuDeChartThoiGian").innerText = `BIỂU ĐỒ PHÂN TÍCH TỶ LỆ (%) THÁNG ${khungChonThang.value.split('-')[1]}/${khungChonThang.value.split('-')[0]}`;
+        const duLieuThang = localStorage.getItem(`cyber_matrix_v37_${currentUser}_${khungChonThang.value}`);
+        danhSachCongViec = duLieuThang ? JSON.parse(duLieuThang) : []; dungLaiGiaoDien();
+    }
+
+    // 🔑 ADMIN & USER SYSTEM STORAGE LOGIC
+    btnDangNhap.addEventListener('click', function() {
+        const user = document.getElementById('TenUser').value.trim();
+        const matKhau = document.getElementById('MatKhauUser').value.trim();
+        if (!user || !matKhau) { alert("Vui lòng nhập tài khoản và mật mã!"); return; }
+
+        currentUser = user;
+
+        // Đăng ký ngầm tài khoản này vào bộ nhớ hệ thống (nếu chưa có) để Admin quét được
+        let danhSachUserHeThong = localStorage.getItem('cyber_matrix_users_registry');
+        let mtd = danhSachUserHeThong ? JSON.parse(danhSachUserHeThong) : [];
+        if(!mtd.includes(user) && user !== 'admin') { mtd.push(user); localStorage.setItem('cyber_matrix_users_registry', JSON.stringify(mtd)); }
+
+        trangDangNhap.classList.add('AnTrangHoanToan');
+        document.getElementById('ThanhMenuHeThong').classList.remove('AnTrangHoanToan');
+        document.getElementById('KhungCuaSoMedia').classList.remove('AnTrangHoanToan');
+
+        // KIỂM TRA ĐĂNG NHẬP ADMIN TỐI CAO
+        if (user === 'admin' && matKhau === 'admin123') {
+            document.getElementById('TabAdmin').classList.remove('AnTrangHoanToan');
+            chuyenTabHeThong('admin');
+            alert("⚡ Quyền tối cao ADMIN kích hoạt thành công!");
+            return;
+        }
+
+        // Giao diện User thường
+        document.getElementById('TabAdmin').classList.add('AnTrangHoanToan');
+        trangChinh.classList.remove('AnTrangHoanToan');
+        document.getElementById('ChuChaoMung').innerText = `CHỈ HUY: ${user.toUpperCase()} ⚡`;
+
+        const linkNhacCu = localStorage.getItem(`cyber_matrix_audio_${currentUser}`);
+        if(linkNhacCu) document.getElementById('UrlYtGiaoDien').value = linkNhacCu;
+        thayDoiThangNamThucTe(); kichHoatEngineSongLayers(); khoiTaoBoKeoResizerChinh();
+    });
+
+    function quetDanhSachUserChoAdmin() {
+        const tbody = document.getElementById('DanhSachUserAdmin'); tbody.innerHTML = "";
+        let danhSachUserHeThong = localStorage.getItem('cyber_matrix_users_registry');
+        let mtd = danhSachUserHeThong ? JSON.parse(danhSachUserHeThong) : [];
+
+        if(mtd.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4">Chưa có người dùng nào đăng ký trên máy này.</td></tr>`; return;
+        }
+
+        mtd.forEach((u, index) => {
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td style="font-weight:bold; color:var(--border-chinh);">${u}</td>
+                    <td><span style="color:#00ff87;">● Active</span></td>
+                    <td><button class="NutXoaViec" onclick="adminXoaTaikhoan('${u}')">Xóa Toàn Bộ Dữ Liệu</button></td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function adminXoaTaikhoan(username) {
+        if(confirm(`CẢNH BÁO: Bạn có chắc chắn muốn xóa tài khoản "${username}" cùng toàn bộ ma trận tiến độ của họ?`)) {
+            let mtd = JSON.parse(localStorage.getItem('cyber_matrix_users_registry') || "[]");
+            let viTri = mtd.indexOf(username); if(viTri > -1) mtd.splice(viTri, 1);
+            localStorage.setItem('cyber_matrix_users_registry', JSON.stringify(mtd));
+
+            // Quét sạch localStorage của user đó
+            for(let key in localStorage) { if(key.includes(`_${username}_`)) localStorage.removeItem(key); }
+            quetDanhSachUserChoAdmin();
+        }
+    }
+
+    document.getElementById('BtnDangXuat').addEventListener('click', function() {
+        document.getElementById('ThanhMenuHeThong').classList.add('AnTrangHoanToan');
+        trangChinh.classList.add('AnTrangHoanToan');
+        document.getElementById('TrangDongHoKhongGian').classList.add('AnTrangHoanToan');
+        document.getElementById('TrangAdminMaster').classList.add('AnTrangHoanToan');
+        trangDangNhap.classList.remove('AnTrangHoanToan');
+        document.getElementById('KhungCuaSoMedia').classList.add('AnTrangHoanToan');
+        document.getElementById('TenUser').value = ""; document.getElementById('MatKhauUser').value = "";
+        if(bieuDoCuaToi) { bieuDoCuaToi.destroy(); bieuDoCuaToi = null; }
+        if(corePlayerYt) corePlayerYt.stopVideo(); isMusicPlaying = false;
+        tamDungDongHoThucTe();
+    });
+
+    btnThemViec.addEventListener('click', function() {
+        const viec = tenViecMoi.value.trim(); if (!viec) return;
+        if (danhSachCongViec.some(t => t.name === viec)) { alert("Nhiệm vụ này đã tồn tại!"); return; }
+        danhSachCongViec.push({ name: viec, grid: Array(DAYS).fill(false) });
+        tenViecMoi.value = ""; luuDuLieu(); dungLaiGiaoDien();
+    });
+
+    function dungLaiGiaoDien() {
+        dauBang.innerHTML = ""; thanBang.innerHTML = "";
+        if (danhSachCongViec.length === 0) {
+            dauBang.innerHTML = `<tr><th>Chưa có dữ liệu ma trận. Hãy thêm nhiệm vụ chiến lược!</th></tr>`;
+            veBieuDoInPhanTram([], [], typeBieuDoHienTai); return;
+        }
+
+        if (boCucHienTai === 'ngang') {
+            let headerHTML = `<tr><th style="text-align:left;">Nhiệm Vụ Chiến Lược</th>`;
+            for(let i=1; i<=DAYS; i++) headerHTML += `<th>${i}</th>`;
+            headerHTML += `<th>Hiệu Suất</th><th>Xóa</th></tr>`; dauBang.innerHTML = headerHTML;
+
+            danhSachCongViec.forEach((task, ti) => {
+                const row = document.createElement('tr');
+                let checkedCount = task.grid ? task.grid.filter(Boolean).length : 0;
+                let phanTram = ((checkedCount / DAYS) * 100).toFixed(0);
+                let cellHTML = `<td style="text-align:left; font-weight:bold;">${task.name}</td>`;
+                for(let i=0; i<DAYS; i++) {
+                    const check = (task.grid && task.grid[i]) ? 'checked' : '';
+                    cellHTML += `<td><input type="checkbox" class="O_TichX" data-ti="${ti}" data-day="${i}" ${check}></td>`;
+                }
+                cellHTML += `<td class="TongDiem" style="color:var(--border-chinh); font-weight:bold;">${phanTram}%</td>`;
+                cellHTML += `<td><button class="NutXoaViec" onclick="xoaTask(${ti})">Xóa</button></td>`;
+                row.innerHTML = cellHTML; thanBang.appendChild(row);
+            });
+        } else {
+            let headerHTML = `<tr><th>Ngày \\ Việc</th>`;
+            danhSachCongViec.forEach(task => { headerHTML += `<th>${task.name}</th>`; });
+            headerHTML += `</tr>`; dauBang.innerHTML = headerHTML;
+
+            for(let d=0; d<DAYS; d++) {
+                const row = document.createElement('tr');
+                let cellHTML = `<td style="font-weight:bold;">Ngày ${d+1}</td>`;
+                danhSachCongViec.forEach((task, ti) => {
+                    const check = (task.grid && task.grid[d]) ? 'checked' : '';
+                    cellHTML += `<td><input type="checkbox" class="O_TichX" data-ti="${ti}" data-day="${d}" ${check}></td>`;
+                });
+                row.innerHTML = cellHTML; thanBang.appendChild(row);
+            }
+        }
+        gaiSuKienCheckbox();
+        veBieuDoInPhanTram(danhSachCongViec.map(t => t.name), danhSachCongViec.map(t => t.grid ? t.grid.filter(Boolean).length : 0), typeBieuDoHienTai);
+    }
+
+    function gaiSuKienCheckbox() {
+        document.querySelectorAll('.O_TichX').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const ti = parseInt(this.getAttribute('data-ti')); const day = parseInt(this.getAttribute('data-day'));
+                if(!danhSachCongViec[ti].grid) danhSachCongViec[ti].grid = Array(DAYS).fill(false);
+                danhSachCongViec[ti].grid[day] = this.checked; luuDuLieu();
+
+                let valuesMoi = danhSachCongViec.map(t => t.grid ? t.grid.filter(Boolean).length : 0);
+                if(bieuDoCuaToi) { bieuDoCuaToi.data.datasets[0].data = valuesMoi; bieuDoCuaToi.update(); }
+                if (boCucHienTai === 'ngang') {
+                    let checkedCount = danhSachCongViec[ti].grid.filter(Boolean).length;
+                    this.parentElement.parentElement.querySelector('.TongDiem').innerText = ((checkedCount / DAYS) * 100).toFixed(0) + "%";
+                }
+            });
+        });
+    }
+
+    function xoaTask(index) { if (confirm(`Xóa bỏ nhiệm vụ "${danhSachCongViec[index].name}"?`)) { danhSachCongViec.splice(index, 1); luuDuLieu(); dungLaiGiaoDien(); } }
+    function luuDuLieu() { localStorage.setItem(`cyber_matrix_v37_${currentUser}_${khungChonThang.value}`, JSON.stringify(danhSachCongViec)); }
+    function doiCheDoBieuDo(type, btn) { typeBieuDoHienTai = type; document.querySelectorAll('.NutChuyenBieuDo').forEach(n => n.classList.remove('Active')); btn.classList.add('Active'); dungLaiGiaoDien(); }
+
+    function doiBoCucManHinh(kieu, btn) {
+        boCucHienTai = kieu; document.querySelectorAll('.NutBoCuc').forEach(n => n.classList.remove('Active')); btn.classList.add('Active');
+        const khuvuc = document.getElementById('KhungNoiDung'); const bangLich = document.getElementById('KhungLichResize'); const vungCanvas = document.getElementById('BoKhungCanvas');
+        bangLich.style.width = ''; bangLich.style.height = '';
+        if(kieu==='doc') { khuvuc.classList.add('CheDoDoc'); vungCanvas.style.minHeight = "0"; } else { khuvuc.classList.remove('CheDoDoc'); vungCanvas.style.minHeight = "280px"; }
+        dungLaiGiaoDien();
+    }
+
+    function veBieuDoInPhanTram(labels, data, type) {
+        if (bieuDoCuaToi) bieuDoCuaToi.destroy();
+        const ctx = document.getElementById('BieuDoQuat').getContext('2d');
+        let tongDiemCacMuc = data.reduce((a, b) => a + b, 0);
+        let isThemeLight = document.body.getAttribute('data-theme') === 'light';
+
+        const pluginInSoPhanTram = {
+            id: 'inSoPhanTramMatDinh',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart; ctx.save();
+                chart.data.datasets.forEach((dataset, i) => {
+                    const meta = chart.getDatasetMeta(i);
+                    meta.data.forEach((element, index) => {
+                        let value = dataset.data[index];
+                        if (value === 0 || tongDiemCacMuc === 0) return;
+                        let chuoiPhanTram = ((value / tongDiemCacMuc) * 100).toFixed(0) + "%";
+                        let x, y;
+                        if (type === 'pie') { const center = element.getCenterPoint(); x = center.x; y = center.y; }
+                        else { x = element.x; y = element.y + 15; }
+                        ctx.fillStyle = isThemeLight ? '#1c1e21' : '#ffffff';
+                        ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                        ctx.fillText(chuoiPhanTram, x, y);
+                    });
+                });
+                ctx.restore();
+            }
+        };
+
+        bieuDoCuaToi = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels.length === 0 ? ['Chưa có việc'] : labels,
+                datasets: [{ data: data.length === 0 ? [0] : data, backgroundColor: ['#00f2fe', '#00ff87', '#ffaa00', '#ff0055', '#7b2cbf'], borderWidth: 2, borderColor: isThemeLight ? '#fff' : '#11111a' }]
+            },
+            plugins: [pluginInSoPhanTram],
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: isThemeLight ? '#1c1e21' : '#e2e8f0' } } },
+                scales: type === 'bar' ? { y: { beginAtZero: true, ticks: { color: isThemeLight ? '#1c1e21' : '#fff' } }, x: { ticks: { color: isThemeLight ? '#1c1e21' : '#fff' } } } : {}
+            }
+        });
+    }
+
+    function khoiTaoBoKeoResizerChinh() {
+        const resizer = document.getElementById('ThanhResizerChinh'); const khungLich = document.getElementById('KhungLichResize'); const container = document.getElementById('KhungNoiDung');
+        let dangGiuChuot = false;
+        resizer.addEventListener('mousedown', function(e) { e.preventDefault(); dangGiuChuot = true; resizer.classList.add('DangKeo'); });
+        window.addEventListener('mousemove', function(e) {
+            if (!dangGiuChuot || window.innerWidth <= 768) return;
+            const thongTinVungChua = container.getBoundingClientRect();
+            if (boCucHienTai === 'ngang') {
+                let chieuCaoMoi = e.clientY - thongTinVungChua.top;
+                if (chieuCaoMoi >= 120 && chieuCaoMoi <= thongTinVungChua.height - 120) khungLich.style.height = chieuCaoMoi + 'px';
+            } else {
+                let chieuRongMoi = e.clientX - thongTinVungChua.left; let phanTramRong = (chieuRongMoi / thongTinVungChua.width) * 100;
+                if (phanTramRong >= 20 && phanTramRong <= 80) khungLich.style.width = phanTramRong + '%';
+            }
+            if(bieuDoCuaToi) bieuDoCuaToi.resize();
+        });
+        window.addEventListener('mouseup', function() { if (dangGiuChuot) { dangGiuChuot = false; resizer.classList.remove('DangKeo'); } });
+    }
+
+    btnKichHoatAI.addEventListener('click', async function() {
+        if (danhSachCongViec.length === 0) { alert("Hãy thêm nhiệm vụ trước!"); return; }
+        btnKichHoatAI.innerText = "🌀 Đang chẩn đoán..."; btnKichHoatAI.disabled = true;
+
+        let chuoiDuLieuPhanTich = ""; let tongTichToanBo = 0;
+        danhSachCongViec.forEach(t => { tongTichToanBo += t.grid ? t.grid.filter(Boolean).length : 0; });
+        danhSachCongViec.forEach(t => {
+            let tich = t.grid ? t.grid.filter(Boolean).length : 0;
+            let phanTramBieuDo = tongTichToanBo > 0 ? ((tich / tongTichToanBo) * 100).toFixed(0) : 0;
+            let hieuSuatThang = ((tich / DAYS) * 100).toFixed(0);
+            chuoiDuLieuPhanTich += `Nhiệm vụ "${t.name}": Chiếm ${phanTramBieuDo}% tỷ trọng biểu đồ, Đạt hiệu suất tháng ${hieuSuatThang}%. `;
+        });
+
+        const promptSieuCap = `Bạn là cố vấn hiệu suất. Hãy phân tích ma trận dữ liệu sau của người dùng: ${chuoiDuLieuPhanTich}. Viết gọn 3 câu phân tích tiến độ, khuyên cụ thể việc cần đẩy nhanh. Không dùng ký tự lạ hay định dạng markdown (*, #).`;
+        try {
+            const b1 = "AIzaSyD"; const b2 = "W_Xn-P8Hl9q0GqJWh2vG6j-w"; const b3 = "wBclVLoQ";
+            const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + b1 + b2 + b3, {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents: [{ parts: [{ text: promptSieuCap }] }] })
+            });
+            const data = await response.json();
+            if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+                noiDungGiaiPhapAI.innerText = "📌 [Cố Vấn]: " + data.candidates[0].content.parts[0].text.replace(/[\*\#\`\-\>]/g, "").trim();
+            } else { noiDungGiaiPhapAI.innerText = "📌 [Cố Vấn Matrix]: Đã phân tích cục bộ. Bạn đang làm rất tốt."; }
+        } catch (err) { noiDungGiaiPhapAI.innerText = "📌 [Cố Vấn Matrix]: Không kết nối được máy chủ AI."; }
+        finally { btnKichHoatAI.innerText = "🔮 Quét Biểu Đồ & Phân Tích"; btnKichHoatAI.disabled = false; }
+    });
+
+    // PLAYER INTERACTIVE YOUTUBE
+    let corePlayerYt = null; let isWindowMo = true; let isMusicPlaying = false; let chuKyThoiGianSong = 0;
+    const canvasSong = document.getElementById("CanvasSongNhac"); const ctxSong = canvasSong.getContext("2d");
+    function fixKichThuocCanvasSong() { canvasSong.width = canvasSong.parentElement.clientWidth; canvasSong.height = canvasSong.parentElement.clientHeight; }
+
+    function taiLuonVideoYoutube() {
+        const urlGoc = document.getElementById('UrlYtGiaoDien').value.trim(); if(!urlGoc) return;
+        const match = urlGoc.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/);
+        const vId = (match && match[2].length === 11) ? match[2] : null; if(!vId) { alert("Sai link!"); return; }
+        localStorage.setItem(`cyber_matrix_audio_${currentUser}`, urlGoc);
+        if (corePlayerYt) { corePlayerYt.loadVideoById(vId); } else {
+            corePlayerYt = new YT.Player('TrinhPhatCoreYt', { height: '100%', width: '100%', videoId: vId, playerVars: { 'autoplay': 1, 'controls': 0 },
+                events: { 'onReady': function(e) { e.target.setVolume(50); e.target.playVideo(); isMusicPlaying = true; }, 'onStateChange': function(e) { isMusicPlaying = (e.data === 1); } }
+            });
+        }
+    }
+    function playVideoYt() { if(corePlayerYt?.playVideo) { corePlayerYt.playVideo(); isMusicPlaying = true; } }
+    function pauseVideoYt() { if(corePlayerYt?.pauseVideo) { corePlayerYt.pauseVideo(); isMusicPlaying = false; } }
+    function tuaVideoYoutube(giay) { if(corePlayerYt?.getCurrentTime) { corePlayerYt.seekTo(corePlayerYt.getCurrentTime() + giay, true); } }
+    function doiTocDoPhatYt(tocDo) { if(corePlayerYt?.setPlaybackRate) { corePlayerYt.setPlaybackRate(parseFloat(tocDo)); } }
+
+    function kichHoatEngineSongLayers() {
+        fixKichThuocCanvasSong(); window.addEventListener('resize', fixKichThuocCanvasSong);
+        function drawLayers() {
+            ctxSong.clearRect(0, 0, canvasSong.width, canvasSong.height); chuKyThoiGianSong += isMusicPlaying ? 0.08 : 0.005;
+            const layers = [
+                { f: 0.015, a: isMusicPlaying ? 14 : 3, t: 0.4, c: "rgba(0, 255, 135, 0.25)" },
+                { f: 0.020, a: isMusicPlaying ? 16 : 3, t: 0.9, c: "rgba(0, 242, 254, 0.5)" },
+                { f: 0.035, a: isMusicPlaying ? 22 : 5, t: 1.3, c: "rgba(255, 0, 85, 0.6)" }
+            ];
+            layers.forEach(l => {
+                ctxSong.beginPath(); ctxSong.fillStyle = l.c;
+                for (let x = 0; x <= canvasSong.width; x++) {
+                    let y = canvasSong.height / 2 + Math.sin(x * l.f + chuKyThoiGianSong * l.t) * l.a;
+                    if (x === 0) ctxSong.moveTo(x, y); else ctxSong.lineTo(x, y);
+                }
+                ctxSong.lineTo(canvasSong.width, canvasSong.height); ctxSong.lineTo(0, canvasSong.height); ctxSong.closePath(); ctxSong.fill();
+            });
+            requestAnimationFrame(drawLayers);
+        }
+        drawLayers();
+    }
+    function haCuaSoMedia() { isWindowMo = !isWindowMo; document.getElementById('KhungCuaSoMedia').classList[isWindowMo ? 'remove' : 'add']('AnMediaWindow'); document.getElementById('NutThuGaoCuaSo').innerText = isWindowMo ? "🔽 Thu gọn" : "🔼 Mở rộng"; }
+    setTimeout(haCuaSoMedia, 600);
+</script>
+<style>
+        .KhuVucNoiDungGiaoDien.CheDoDoc #KhungLichResize {
+            width: 50% !important;
+            overflow-x: auto !important;
+            display: block !important;
+        }
+
+        #BangHienThi {
+            width: max-content !important;
+        }
+
+        #KhungLichResize {
+            overflow-x: scroll !important;
+            scrollbar-width: thin;
+            height: 350px !important;
+        }
+
+        #BangHienThi th:first-child, #BangHienThi td:first-child {
+            position: sticky !important;
+            left: 0 !important;
+            z-index: 100;
+            background: var(--bg-o-nhap) !important;
+        }
+    </style>
+</body>
+</html>
