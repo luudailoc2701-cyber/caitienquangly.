@@ -2,73 +2,97 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Lightning Matrix - Master System</title>
+    <title>Lightning Matrix - Secured Master System</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background: #0a0a0a !important; color: #fff !important; font-family: sans-serif; padding: 20px; }
-        .system-container { display: flex; flex-direction: column; gap: 20px; max-width: 900px; margin: auto; }
-        .panel { background: #1a1a1a; padding: 20px; border-radius: 12px; border: 1px solid #333; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; margin: 0; }
+        .panel { background: #1a1a1a; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
+        
+        /* Màn hình đăng nhập */
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:#111; display:flex; align-items:center; justify-content:center; z-index:9999; }
+        
+        /* Dashboard chính */
+        #main-content { display: none; max-width: 900px; margin: auto; }
         .force-resize { transform: scale(1); transform-origin: top left; transition: 0.3s; }
-        input { background: #333; color: #fff; border: none; padding: 5px; width: 100px; }
+        input { background: #333; color: #fff; border: 1px solid #444; padding: 8px; margin: 5px; border-radius: 4px; }
+        button { padding: 8px 15px; cursor: pointer; background: #ff4500; border: none; color: white; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="system-container">
+<div id="login-screen">
+    <div class="panel">
+        <h2>Đăng nhập Hệ thống</h2>
+        <input type="text" id="user" placeholder="Tên tài khoản (admin)"><br>
+        <input type="password" id="pass" placeholder="Mật khẩu (123)"><br>
+        <button onclick="checkLogin()">Xác thực</button>
+        <p id="error-msg" style="color:red;"></p>
+    </div>
+</div>
+
+<div id="main-content">
     <div class="panel">
         <h1>Lightning Matrix Dashboard</h1>
         <label>Phóng đại: <input type="range" id="zoom-slider" min="1" max="1.5" step="0.1" value="1"></label>
         <button onclick="toggleChart()">Chuyển Biểu Đồ (Cột/Tròn)</button>
-        <div id="stats">Hiệu suất trung bình: <span id="avg-val">0</span></div>
+        <p>Hiệu suất trung bình: <span id="avg-val">0</span></p>
     </div>
 
     <div id="matrix-section" class="force-resize">
-        <table id="data-table" border="1"></table>
+        <table id="data-table" border="1" style="width:100%; border-collapse:collapse;"></table>
     </div>
 
-    <div class="panel">
+    <div class="panel" style="margin-top:20px;">
         <canvas id="mainChart"></canvas>
     </div>
 </div>
 
 <script>
-    // 1. Cấu trúc dữ liệu & Lưu trữ (LocalStorage Manager)
+    // --- HỆ THỐNG XÁC THỰC ---
+    function checkLogin() {
+        if (document.getElementById('user').value === "admin" && document.getElementById('pass').value === "123") {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            initSystem(); 
+        } else {
+            document.getElementById('error-msg').innerText = "Sai tài khoản hoặc mật khẩu!";
+        }
+    }
+
+    // --- CÁC TÍNH NĂNG HỆ THỐNG ---
     const saveData = () => {
         const inputs = Array.from(document.querySelectorAll('input[type="text"]')).map(i => i.value);
         localStorage.setItem('matrixData', JSON.stringify(inputs));
         updatePerformance();
     };
 
-    const loadData = () => {
-        const data = JSON.parse(localStorage.getItem('matrixData') || '[]');
-        const inputs = document.querySelectorAll('input[type="text"]');
-        data.forEach((val, i) => { if(inputs[i]) inputs[i].value = val; });
-    };
-
-    // 2. Tính toán & Hiệu ứng biểu đồ
     const updatePerformance = () => {
-        const values = Array.from(document.querySelectorAll('input[type="text"]')).map(i => i.value.length * 10);
+        const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+        const values = inputs.map(i => i.value.length * 10);
         document.getElementById('avg-val').innerText = (values.reduce((a,b)=>a+b, 0)/14).toFixed(2);
-        
         if(window.chartInstance) {
             window.chartInstance.data.datasets[0].data = values;
             window.chartInstance.update();
         }
     };
 
-    // 3. Khởi tạo hệ thống cưỡng ép
     const initSystem = () => {
         const table = document.getElementById('data-table');
+        table.innerHTML = ''; // Reset table
         for(let i=1; i<=14; i++) {
-            table.innerHTML += `<tr><td>Ngày ${i}</td><td><input type="text" oninput="saveData()"></td></tr>`;
+            table.innerHTML += `<tr><td style="padding:10px;">Ngày ${i}</td><td><input type="text" oninput="saveData()" style="width:90%;"></td></tr>`;
         }
         
         window.chartInstance = new Chart(document.getElementById('mainChart'), {
             type: 'bar',
             data: { labels: Array(14).fill(0).map((_,i)=>i+1), datasets: [{ data: Array(14).fill(0), backgroundColor: '#ff4500' }] },
-            options: { animation: { duration: 2000, easing: 'easeOutBounce' } }
+            options: { animation: { duration: 2000 } }
         });
-        loadData();
+
+        const saved = JSON.parse(localStorage.getItem('matrixData') || '[]');
+        const inputs = document.querySelectorAll('input[type="text"]');
+        saved.forEach((val, i) => { if(inputs[i]) inputs[i].value = val; });
+        updatePerformance();
     };
 
     window.toggleChart = () => {
@@ -80,8 +104,6 @@
     document.getElementById('zoom-slider').addEventListener('input', (e) => {
         document.getElementById('matrix-section').style.transform = `scale(${e.target.value})`;
     });
-
-    initSystem();
 </script>
 </body>
 </html>
